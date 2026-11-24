@@ -3,8 +3,8 @@
 # Introductory example demonstrating basic dictionary key and object attribute
 # dereferencing under both standard Python and SoftLookup-PVM.
 # Demonstrates missing keys and attributes returning None instead of crashing.
-# Run with regular python: `python3 examples/01_basic_dict_and_attr.py`
-# Run with SoftLookup-PVM: `softlookup-python examples/01_basic_dict_and_attr.py`
+# Run with regular python: `python3 examples/01_basic_dict_and_attr.py` (or `wsl python3 ...`)
+# Run with SoftLookup-PVM: `softlookup-python examples/01_basic_dict_and_attr.py` (or `wsl softlookup-python ...`)
 # =============================================================================
 
 """
@@ -14,12 +14,15 @@ DUAL RUN EXECUTION GUIDE
 
 🔴 1. RUNNING WITH REGULAR / UNMODIFIED PYTHON:
 -----------------------------------------------------------------------------
-Command:
+Command (if inside WSL / Linux):
     python3 examples/01_basic_dict_and_attr.py
+
+Command (if inside Windows PowerShell):
+    wsl python3 examples/01_basic_dict_and_attr.py
 
 Expected Output / Failure:
     Traceback (most recent call last):
-      File "examples/01_basic_dict_and_attr.py", line 45, in <module>
+      File "examples/01_basic_dict_and_attr.py", line 63, in main
         nickname = user_dict["nickname"]
     KeyError: 'nickname'
 
@@ -31,16 +34,28 @@ Explanation:
 
 🟢 2. RUNNING WITH SOFTLOOKUP-PVM RUNTIME:
 -----------------------------------------------------------------------------
-Command:
+Command (if inside WSL / Linux):
     softlookup-python examples/01_basic_dict_and_attr.py
 
+Command (if inside Windows PowerShell):
+    wsl softlookup-python examples/01_basic_dict_and_attr.py
+
 Expected Output:
-    [SoftLookup-PVM] Running on: 3.16.0a2+dev ... [GCC 15.2.0, SoftLookup-PVM]
-    [Step 1] Enabling soft lookup mode via sys.set_soft_lookup(True)
-    [Step 2] Accessing missing dictionary key 'nickname': None
-    [Step 3] Accessing missing object attribute 'avatar_url': None
-    [Step 4] Telemetry stats: {'soft_key_misses': 1, 'soft_attr_misses': 1}
-    [Success] Execution completed without crashing!
+    Runtime Version: 3.16.0a2+dev ... [GCC 15.2.0, SoftLookup-PVM]
+    [SoftLookup-PVM Detected] Enabling soft-lookup mode...
+
+    --- Reading Dictionary Keys ---
+    user_dict['name']     (existing) -> Jane Doe
+    user_dict['nickname'] (missing)  -> None
+
+    --- Reading Object Attributes ---
+    profile.bio           (existing) -> Open source contributor
+    profile.avatar_url    (missing)  -> None
+
+    --- Telemetry ---
+    Telemetry: {'soft_key_misses': 1, 'soft_attr_misses': 1}
+
+    [SUCCESS] Completed all lookups!
 
 Explanation:
     Under SoftLookup-PVM, the virtual machine intercepts KeyError and

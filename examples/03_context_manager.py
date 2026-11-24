@@ -3,8 +3,8 @@
 # Demonstrates scoped, temporary soft-lookup mode using the Pythonic
 # `soft_lookup()` context manager from `src.runtime_client`.
 # Confirms strict error handling before, soft handling during, and strictness after.
-# Run with regular python: `python3 examples/03_context_manager.py`
-# Run with SoftLookup-PVM: `softlookup-python examples/03_context_manager.py`
+# Run with regular python: `python3 examples/03_context_manager.py` (or `wsl python3 ...`)
+# Run with SoftLookup-PVM: `softlookup-python examples/03_context_manager.py` (or `wsl softlookup-python ...`)
 # =============================================================================
 
 """
@@ -14,8 +14,11 @@ DUAL RUN EXECUTION GUIDE
 
 🔴 1. RUNNING WITH REGULAR / UNMODIFIED PYTHON:
 -----------------------------------------------------------------------------
-Command:
+Command (if inside WSL / Linux):
     python3 examples/03_context_manager.py
+
+Command (if inside Windows PowerShell):
+    wsl python3 examples/03_context_manager.py
 
 Expected Output / Failure:
     RuntimeError: Native Soft-Lookup Mode requires the SoftLookup-PVM runtime.
@@ -29,15 +32,26 @@ Explanation:
 
 🟢 2. RUNNING WITH SOFTLOOKUP-PVM RUNTIME:
 -----------------------------------------------------------------------------
-Command:
+Command (if inside WSL / Linux):
     softlookup-python examples/03_context_manager.py
 
+Command (if inside Windows PowerShell):
+    wsl softlookup-python examples/03_context_manager.py
+
 Expected Output:
-    [Before Context] Strict mode active: KeyError raised on record['extra']
-    [Inside Context] Soft-lookup active: record['extra'] -> None
-    [Inside Context] Telemetry captured: {'soft_key_misses': 1, 'soft_attr_misses': 0}
-    [After Context]  Strict mode restored: KeyError raised on record['extra']
-    Context manager demo completed successfully!
+    Executing under: 3.16.0a2+dev ... [GCC 15.2.0, SoftLookup-PVM]
+
+    1. Before Context: Testing Default Strict Behavior
+       [OK] Strict mode active: KeyError caught on record['extra'].
+
+    2. Inside Context: Scoped Soft-Lookup Execution
+       record['extra'] resolved cleanly to: None
+       Context telemetry: {'soft_key_misses': 1, 'soft_attr_misses': 0}
+
+    3. After Context: Verifying Strict Restoration
+       [OK] Strict mode restored: KeyError caught on record['extra'].
+
+    [SUCCESS] Context manager scoping and restoration verified!
 
 Explanation:
     `with soft_lookup():` provides RAII-style scoped isolation, ensuring that

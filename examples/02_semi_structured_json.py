@@ -3,8 +3,8 @@
 # Real-world showcase demonstrating ingestion of semi-structured JSON records
 # with optional or omitted fields across multiple document iterations.
 # Eliminates verbose defensive chains (.get() or try/except) when parsing data.
-# Run with regular python: `python3 examples/02_semi_structured_json.py`
-# Run with SoftLookup-PVM: `softlookup-python examples/02_semi_structured_json.py`
+# Run with regular python: `python3 examples/02_semi_structured_json.py` (or `wsl python3 ...`)
+# Run with SoftLookup-PVM: `softlookup-python examples/02_semi_structured_json.py` (or `wsl softlookup-python ...`)
 # =============================================================================
 
 """
@@ -14,13 +14,16 @@ DUAL RUN EXECUTION GUIDE
 
 🔴 1. RUNNING WITH REGULAR / UNMODIFIED PYTHON:
 -----------------------------------------------------------------------------
-Command:
+Command (if inside WSL / Linux):
     python3 examples/02_semi_structured_json.py
+
+Command (if inside Windows PowerShell):
+    wsl python3 examples/02_semi_structured_json.py
 
 Expected Output / Failure:
     Traceback (most recent call last):
-      File "examples/02_semi_structured_json.py", line 55, in process_order
-        discount = order["coupon"]["code"]
+      File "examples/02_semi_structured_json.py", line 65, in process_orders
+        coupon = order["coupon"]
     KeyError: 'coupon'
 
 Explanation:
@@ -31,22 +34,27 @@ Explanation:
 
 🟢 2. RUNNING WITH SOFTLOOKUP-PVM RUNTIME:
 -----------------------------------------------------------------------------
-Command:
+Command (if inside WSL / Linux):
     softlookup-python examples/02_semi_structured_json.py
 
+Command (if inside Windows PowerShell):
+    wsl softlookup-python examples/02_semi_structured_json.py
+
 Expected Output:
-    [Processing Order 1001]
-      Buyer: Alice
-      Item: Mechanical Keyboard
-      Coupon: SUMMER25
-      Special Instructions: None (omitted in payload)
-    [Processing Order 1002]
-      Buyer: Bob
-      Item: Gaming Mouse
-      Coupon: None (omitted in payload)
-      Special Instructions: Leave on front porch
-    Telemetry Recorded: {'soft_key_misses': 3, 'soft_attr_misses': 0}
-    Processed 2 orders cleanly in 0.0002s!
+    [Processing Order ORD-1001]
+      Buyer   : Alice
+      Item    : Mechanical Keyboard
+      Coupon  : SUMMER25
+      Notes   : None
+
+    [Processing Order ORD-1002]
+      Buyer   : Bob
+      Item    : Gaming Mouse
+      Coupon  : None
+      Notes   : Leave on front porch
+
+    Telemetry Recorded : {'soft_key_misses': 2, 'soft_attr_misses': 0}
+    Successfully processed 2 orders in 0.000050s!
 
 Explanation:
     SoftLookup-PVM resolves missing keys to None directly at the bytecode level,
