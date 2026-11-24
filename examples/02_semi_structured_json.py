@@ -8,58 +8,78 @@
 # =============================================================================
 
 """
-=============================================================================
-DUAL RUN EXECUTION GUIDE
-=============================================================================
+====================================================================================================
+                                STEP-BY-STEP DUAL-RUN EXECUTION GUIDE
+====================================================================================================
 
-🔴 1. RUNNING WITH REGULAR / UNMODIFIED PYTHON:
------------------------------------------------------------------------------
-Command (if inside WSL / Linux):
-    python3 examples/02_semi_structured_json.py
+This guide provides the exact terminal commands and expected outputs for testing this script under
+both Normal Python and your custom SoftLookup-PVM runtime.
 
-Command (if inside Windows PowerShell):
-    wsl python3 examples/02_semi_structured_json.py
+----------------------------------------------------------------------------------------------------
+🔴 TEST 1: RUNNING WITH REGULAR / UNMODIFIED PYTHON (Demonstrates Strict Failure)
+----------------------------------------------------------------------------------------------------
 
-Expected Output / Failure:
-    Traceback (most recent call last):
-      File "examples/02_semi_structured_json.py", line 65, in process_orders
-        coupon = order["coupon"]
-    KeyError: 'coupon'
+Where to run:
+  • If your terminal is in Windows PowerShell:
+        wsl python3 examples/02_semi_structured_json.py
+  • If your terminal is inside WSL / Ubuntu:
+        python3 examples/02_semi_structured_json.py
 
-Explanation:
-    When ingesting inhomogeneous document payloads, missing nested keys
-    halt pipeline processing with KeyError unless every step is defensively
-    guarded with `.get("coupon", {})` or nested `try/except` statements.
+Exact Expected Terminal Output:
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ [Processing Order ORD-1001]                                                                      │
+│   Buyer   : Alice                                                                                │
+│   Item    : Mechanical Keyboard                                                                  │
+│   Coupon  : SUMMER25                                                                             │
+│   Notes   : None                                                                                 │
+│                                                                                                  │
+│ [Processing Order ORD-1002]                                                                      │
+│   Buyer   : Bob                                                                                  │
+│   Item    : Gaming Mouse                                                                         │
+│ Traceback (most recent call last):                                                               │
+│   File "examples/02_semi_structured_json.py", line 82, in process_orders                          │
+│     coupon = order["coupon"]                                                                     │
+│ KeyError: 'coupon'                                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Why it failed:
+  Order ORD-1002 does not have a "coupon" key. In standard Python, accessing `order["coupon"]`
+  raises an unhandled `KeyError`, crashing the ingestion pipeline.
 
 
-🟢 2. RUNNING WITH SOFTLOOKUP-PVM RUNTIME:
------------------------------------------------------------------------------
-Command (if inside WSL / Linux):
-    softlookup-python examples/02_semi_structured_json.py
+----------------------------------------------------------------------------------------------------
+🟢 TEST 2: RUNNING WITH SOFTLOOKUP-PVM (Demonstrates Successful Execution)
+----------------------------------------------------------------------------------------------------
 
-Command (if inside Windows PowerShell):
-    wsl softlookup-python examples/02_semi_structured_json.py
+Where to run:
+  • If your terminal is in Windows PowerShell:
+        wsl softlookup-python examples/02_semi_structured_json.py
+  • If your terminal is inside WSL / Ubuntu:
+        softlookup-python examples/02_semi_structured_json.py
 
-Expected Output:
-    [Processing Order ORD-1001]
-      Buyer   : Alice
-      Item    : Mechanical Keyboard
-      Coupon  : SUMMER25
-      Notes   : None
+Exact Expected Terminal Output:
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ [Processing Order ORD-1001]                                                                      │
+│   Buyer   : Alice                                                                                │
+│   Item    : Mechanical Keyboard                                                                  │
+│   Coupon  : SUMMER25                                                                             │
+│   Notes   : None                                                                                 │
+│                                                                                                  │
+│ [Processing Order ORD-1002]                                                                      │
+│   Buyer   : Bob                                                                                  │
+│   Item    : Gaming Mouse                                                                         │
+│   Coupon  : None                                                                                 │
+│   Notes   : Leave on front porch                                                                 │
+│                                                                                                  │
+│ Telemetry Recorded : {'soft_key_misses': 2, 'soft_attr_misses': 0}                                │
+│ Successfully processed 2 orders in 0.000050s!                                                    │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-    [Processing Order ORD-1002]
-      Buyer   : Bob
-      Item    : Gaming Mouse
-      Coupon  : None
-      Notes   : Leave on front porch
-
-    Telemetry Recorded : {'soft_key_misses': 2, 'soft_attr_misses': 0}
-    Successfully processed 2 orders in 0.000050s!
-
-Explanation:
-    SoftLookup-PVM resolves missing keys to None directly at the bytecode level,
-    enabling expressive and concise data transformation pipelines.
-=============================================================================
+Why it succeeded:
+  SoftLookup-PVM seamlessly evaluates missing optional fields (`order["coupon"]` and
+  `order["notes"]`) to `None` without raising exceptions or allocating traceback objects,
+  increasing ingestion speed and code readability.
+====================================================================================================
 """
 
 import sys

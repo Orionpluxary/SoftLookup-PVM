@@ -8,59 +8,75 @@
 # =============================================================================
 
 """
-=============================================================================
-DUAL RUN EXECUTION GUIDE
-=============================================================================
+====================================================================================================
+                                STEP-BY-STEP DUAL-RUN EXECUTION GUIDE
+====================================================================================================
 
-🔴 1. RUNNING WITH REGULAR / UNMODIFIED PYTHON:
------------------------------------------------------------------------------
-Command (if inside WSL / Linux):
-    python3 examples/01_basic_dict_and_attr.py
+This guide provides the exact terminal commands and expected outputs for testing this script under
+both Normal Python and your custom SoftLookup-PVM runtime.
 
-Command (if inside Windows PowerShell):
-    wsl python3 examples/01_basic_dict_and_attr.py
+----------------------------------------------------------------------------------------------------
+🔴 TEST 1: RUNNING WITH REGULAR / UNMODIFIED PYTHON (Demonstrates Strict Failure)
+----------------------------------------------------------------------------------------------------
 
-Expected Output / Failure:
-    Traceback (most recent call last):
-      File "examples/01_basic_dict_and_attr.py", line 63, in main
-        nickname = user_dict["nickname"]
-    KeyError: 'nickname'
+Where to run:
+  • If your terminal is in Windows PowerShell:
+        wsl python3 examples/01_basic_dict_and_attr.py
+  • If your terminal is inside WSL / Ubuntu:
+        python3 examples/01_basic_dict_and_attr.py
 
-Explanation:
-    In standard unmodified Python, subscripting a dict with an absent key
-    immediately raises a KeyError exception, halting the program unless
-    wrapped in try/except or chained .get() calls.
+Exact Expected Terminal Output:
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Runtime Version: 3.14.4 (main, ... ) [GCC ...] on linux                                          │
+│ [Standard Python Detected] Running in default strict mode...                                     │
+│                                                                                                  │
+│ --- Reading Dictionary Keys ---                                                                  │
+│ user_dict['name']     (existing) -> Jane Doe                                                     │
+│ Traceback (most recent call last):                                                               │
+│   File "examples/01_basic_dict_and_attr.py", line 75, in main                                    │
+│     nickname = user_dict["nickname"]                                                             │
+│ KeyError: 'nickname'                                                                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Why it failed:
+  In standard Python, `user_dict["nickname"]` immediately allocates and raises a `KeyError`
+  exception because the key does not exist. The script terminates prematurely at line 75.
 
 
-🟢 2. RUNNING WITH SOFTLOOKUP-PVM RUNTIME:
------------------------------------------------------------------------------
-Command (if inside WSL / Linux):
-    softlookup-python examples/01_basic_dict_and_attr.py
+----------------------------------------------------------------------------------------------------
+🟢 TEST 2: RUNNING WITH SOFTLOOKUP-PVM (Demonstrates Successful Execution)
+----------------------------------------------------------------------------------------------------
 
-Command (if inside Windows PowerShell):
-    wsl softlookup-python examples/01_basic_dict_and_attr.py
+Where to run:
+  • If your terminal is in Windows PowerShell:
+        wsl softlookup-python examples/01_basic_dict_and_attr.py
+  • If your terminal is inside WSL / Ubuntu:
+        softlookup-python examples/01_basic_dict_and_attr.py
 
-Expected Output:
-    Runtime Version: 3.16.0a2+dev ... [GCC 15.2.0, SoftLookup-PVM]
-    [SoftLookup-PVM Detected] Enabling soft-lookup mode...
+Exact Expected Terminal Output:
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Runtime Version: 3.16.0a2+dev (heads/main-dirty:a46c65c, ...) [GCC 15.2.0, SoftLookup-PVM]      │
+│ [SoftLookup-PVM Detected] Enabling soft-lookup mode...                                           │
+│                                                                                                  │
+│ --- Reading Dictionary Keys ---                                                                  │
+│ user_dict['name']     (existing) -> Jane Doe                                                     │
+│ user_dict['nickname'] (missing)  -> None                                                         │
+│                                                                                                  │
+│ --- Reading Object Attributes ---                                                                │
+│ profile.bio           (existing) -> Open source contributor                                      │
+│ profile.avatar_url    (missing)  -> None                                                         │
+│                                                                                                  │
+│ --- Telemetry ---                                                                                │
+│ Telemetry: {'soft_key_misses': 1, 'soft_attr_misses': 1}                                         │
+│                                                                                                  │
+│ [SUCCESS] Completed all lookups!                                                                 │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-    --- Reading Dictionary Keys ---
-    user_dict['name']     (existing) -> Jane Doe
-    user_dict['nickname'] (missing)  -> None
-
-    --- Reading Object Attributes ---
-    profile.bio           (existing) -> Open source contributor
-    profile.avatar_url    (missing)  -> None
-
-    --- Telemetry ---
-    Telemetry: {'soft_key_misses': 1, 'soft_attr_misses': 1}
-
-    [SUCCESS] Completed all lookups!
-
-Explanation:
-    Under SoftLookup-PVM, the virtual machine intercepts KeyError and
-    AttributeError at the VM level, returning None and recording telemetry.
-=============================================================================
+Why it succeeded:
+  Under SoftLookup-PVM, `user_dict["nickname"]` and `profile.avatar_url` are intercepted directly
+  inside CPython's VM layer. Instead of raising `KeyError` and `AttributeError`, the runtime
+  increments atomic telemetry counters and returns `None` with balanced reference counts.
+====================================================================================================
 """
 
 import sys
@@ -82,23 +98,26 @@ def main():
 
     profile = UserProfile("Open source contributor")
 
-    # Check if native soft lookup is supported
+    # Step 1: Detect runtime and enable soft lookup if supported
     if hasattr(sys, "set_soft_lookup"):
         print("[SoftLookup-PVM Detected] Enabling soft-lookup mode...")
         sys.set_soft_lookup(True)
     else:
         print("[Standard Python Detected] Running in default strict mode...")
 
+    # Step 2: Read dictionary keys (existing vs missing)
     print("\n--- Reading Dictionary Keys ---")
     print(f"user_dict['name']     (existing) -> {user_dict['name']}")
     nickname = user_dict["nickname"]  # In standard Python, raises KeyError here!
     print(f"user_dict['nickname'] (missing)  -> {nickname}")
 
+    # Step 3: Read object attributes (existing vs missing)
     print("\n--- Reading Object Attributes ---")
     print(f"profile.bio           (existing) -> {profile.bio}")
     avatar = profile.avatar_url       # In standard Python, raises AttributeError here!
     print(f"profile.avatar_url    (missing)  -> {avatar}")
 
+    # Step 4: Inspect telemetry statistics
     if hasattr(sys, "get_soft_lookup_stats"):
         print(f"\n--- Telemetry ---")
         print(f"Telemetry: {sys.get_soft_lookup_stats()}")
