@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Standalone archive & build artifacts
+*.tar.gz
+*.tgz
+*.zip
+*.whl
+build/
+dist/
+*.egg-info/
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Logs & temporary files
+*.log
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# OS specific files
+.DS_Store
+Thumbs.db
